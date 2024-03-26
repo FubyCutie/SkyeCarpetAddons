@@ -5,6 +5,11 @@ import carpet.api.settings.Rule
 import carpet.api.settings.RuleCategory
 import carpet.api.settings.Validator
 import carpet.utils.Messenger
+import com.mojang.brigadier.exceptions.CommandSyntaxException
+import net.minecraft.block.Block
+import net.minecraft.block.BlockState
+import net.minecraft.command.argument.BlockArgumentParser
+import net.minecraft.registry.Registries
 import net.minecraft.server.command.ServerCommandSource
 
 object Options {
@@ -23,9 +28,46 @@ object Options {
 
     @JvmField
     @Rule(
-        categories = [RuleCategory.FEATURE]
+        categories = [RuleCategory.FEATURE],
+        validators = [FastMinecartsValidator::class],
+        options = ["off", "smooth_stone 4, #stone_bricks 2", "minecraft:gravel 2, minecraft:netherrack 4"],
+        strict = false
     )
-    var fastMinecarts = false
+    var fastMinecarts = "off"
+
+    var parsedFastMinecartBehaviour = mapOf<Block, Int>()
+
+    class FastMinecartsValidator : Validator<String>() {
+        override fun validate(
+            source: ServerCommandSource?,
+            changingRule: CarpetRule<String>?,
+            newValue: String?,
+            userInput: String?
+        ): String? {
+            if (newValue.isNullOrBlank()) return null;
+            if (newValue == "off") return newValue
+            newValue.split(", ").forEach {
+                val value = it.split(" ")
+                try {
+                    BlockArgumentParser.blockOrTag(Registries.BLOCK.readOnlyWrapper, value[0], false)
+                } catch (e : CommandSyntaxException) {
+                    Messenger.m(source, "r Values must be valid blocks or tags e.g. minecraft:oak_planks, or #minecraft:planks")
+                    return null
+                }
+
+                try {
+                    value[1].toInt()
+                } catch (e: NumberFormatException) {
+                    Messenger.m(source, "r Speed multipliers must be an integer value")
+                    return null
+                } catch (e: IndexOutOfBoundsException) {
+                    Messenger.m(source, "r Must include a speed multiplier")
+                    return null
+                }
+            }
+            return newValue
+        }
+    }
 
     @JvmField
     @Rule(
@@ -114,5 +156,9 @@ object Options {
         }
     }
 
-
+    @JvmField
+    @Rule(
+        categories = [RuleCategory.FEATURE],
+    )
+    var movableReinforcedDeepslate = false
 }

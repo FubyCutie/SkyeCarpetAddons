@@ -1,7 +1,8 @@
 {
   "carpet.rule.thunderRitual.desc": "Throwing a stack of lightning rods into the void causes 10 minutes of thunder",
   "carpet.rule.traderRitual.desc": "Throwing 16 emerald blocks into the void spawns a wandering trader directly above",
-  "carpet.rule.fastMinecarts.desc": "Makes minecarts 4 times faster when on straight rails with smooth stone underneath",
+  "carpet.rule.fastMinecarts.desc": "Gives minecarts a speed multiplier when on top of configured block(s)",
   "carpet.rule.hardcodedItemRNG.desc": "Allows you to set the random velocity of items",
-  "carpet.rule.hardcodedDispenserItemRNG.desc": "Allows you to set the random velocity of items that are dispensed"
+  "carpet.rule.hardcodedDispenserItemRNG.desc": "Allows you to set the random velocity of items that are dispensed",
+  "carpet.rule.movableReinforcedDeepslate.desc": "Makes reinforced deepslate blocks movable by piston"
 }

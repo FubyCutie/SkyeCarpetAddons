@@ -11,6 +11,7 @@ import net.minecraft.util.math.*;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -34,34 +35,42 @@ public abstract class MinecartMixin extends Entity {
     protected double getMaxSpeed() {return 0;}
 
 
-    private boolean isEligibleForFastCart(BlockPos pos, BlockState state) {
-        if(!Options.fastMinecarts) return false;
-        if(!world.getBlockState(pos.offset(Direction.DOWN)).isOf(Blocks.SMOOTH_STONE)) return false;
-        if(this.isTouchingWater()) return false;
+    @Unique
+    private int cartSpeedMultiplier(BlockPos pos, BlockState state) {
+        if(Options.fastMinecarts.equals("off")) return 1;
+        
+        if(this.isTouchingWater()) return 1;
         if (state.isOf(Blocks.RAIL) || (state.isOf(Blocks.POWERED_RAIL) && state.get(PoweredRailBlock.POWERED))) {
             RailShape shape = state.get(((AbstractRailBlock)state.getBlock()).getShapeProperty());
-            return shape == RailShape.EAST_WEST || shape == RailShape.NORTH_SOUTH;
+            if (shape == RailShape.EAST_WEST || shape == RailShape.NORTH_SOUTH) {
+                return Options.INSTANCE.getParsedFastMinecartBehaviour().getOrDefault(world.getBlockState(pos.down()).getBlock(), 1);
+            }
         }
-        return false;
+        return 1;
     }
 
     @Inject(at = @At("HEAD"), method = "moveOnRail", cancellable = true)
     protected void moveOnRailOverwrite(BlockPos pos, BlockState state, CallbackInfo ci) {
-        if(!isEligibleForFastCart(pos, state)) return;
-
-        for (int i = 0; i < 4; i++) {
+        if(cartSpeedMultiplier(pos, state) == 1) return;
+        
+        int i = 0;
+        int steps = cartSpeedMultiplier(pos, state);
+        while (steps > i) {
             int x = MathHelper.floor(this.getX());
             int y = MathHelper.floor(this.getY());
             int z = MathHelper.floor(this.getZ());
             BlockPos railPos = new BlockPos(x, y, z);
             BlockState railState = this.world.getBlockState(railPos);
-            if(!isEligibleForFastCart(railPos, railState)) break;
+            if (!(railState.getBlock() instanceof AbstractRailBlock)) break;
             fastCartMoveOnRail(railPos, railState);
+            i++;
+            steps = cartSpeedMultiplier(pos, state);
         }
         ci.cancel();
 
     }
 
+    @Unique
     private void fastCartMoveOnRail(BlockPos pos, BlockState state) {
         this.onLanding();
         double d = this.getX();

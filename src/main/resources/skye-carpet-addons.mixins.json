@@ -5,7 +5,8 @@
 	"mixins": [
 		"ItemEntityMixin",
 		"MinecartMixin",
-		"ItemDispenseBehaviourMixin"
+		"ItemDispenseBehaviourMixin",
+		"PistonBlockMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

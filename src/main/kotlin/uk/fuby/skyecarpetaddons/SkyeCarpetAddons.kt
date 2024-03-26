@@ -2,6 +2,7 @@ package uk.fuby.skyecarpetaddons
 
 import carpet.CarpetExtension
 import carpet.CarpetServer
+import carpet.api.settings.SettingsManager
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
 import net.fabricmc.api.ModInitializer
@@ -10,7 +11,7 @@ import java.io.IOException
 
 
 object SkyeCarpetAddons : ModInitializer, CarpetExtension {
-    private val logger = LoggerFactory.getLogger("skye-carpet-addons")
+    val logger = LoggerFactory.getLogger("skye-carpet-addons")
 
 	override fun onInitialize() {
 		CarpetServer.manageExtension(this)
@@ -21,7 +22,9 @@ object SkyeCarpetAddons : ModInitializer, CarpetExtension {
 	}
 
 	override fun onGameStarted() {
-		CarpetServer.settingsManager.parseSettingsClass(Options.javaClass)
+		val carpetSettingsManager = CarpetServer.settingsManager
+		carpetSettingsManager.parseSettingsClass(Options.javaClass)
+		carpetSettingsManager.registerRuleObserver(RuleObserver)
 	}
 
 	override fun canHasTranslations(lang: String?): MutableMap<String, String> {
